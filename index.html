@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>중계정상어학원 셔틀 찾기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=3b856d48a2f59950b7276395406d22fd&libraries=services,roadview"></script>
+<style>
+:root {
+  --sky:#e8f4fd;--sky-mid:#bfdffa;--sky-deep:#7ec2f5;
+  --blue:#4a9fd4;--blue-dark:#2d7bb8;--navy:#2c5f8a;
+  --text:#1e3a52;--text-mid:#4a6880;--text-light:#7a9ab5;
+  --white:#ffffff;--bg:#f0f7fd;--border:#d4e8f7;
+  --green:#2ea87a;--green-light:#e8f8f2;
+  --radius:16px;--radius-sm:10px;--radius-xs:6px;
+  --shadow:0 2px 12px rgba(44,95,138,0.08);
+  --shadow-md:0 4px 20px rgba(44,95,138,0.12);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Noto Sans KR",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+header{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:var(--shadow);}
+.logo{display:flex;align-items:center;gap:9px;}
+.logo-text{font-size:14px;font-weight:800;color:var(--navy);letter-spacing:-0.02em;}
+.logo-text span{color:var(--blue);}
+.header-tag{font-size:10px;font-weight:800;color:var(--white);background:linear-gradient(135deg,var(--blue),var(--navy));padding:3px 9px;border-radius:99px;letter-spacing:0.06em;text-decoration:none;}
+.tt-banner{display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,var(--navy),var(--blue-dark));color:white;text-decoration:none;padding:12px 16px;font-size:13px;font-weight:800;letter-spacing:-0.01em;transition:opacity 0.15s;}
+.tt-banner:hover{opacity:0.92;}
+.tt-banner svg{width:16px;height:16px;fill:white;flex-shrink:0;}
+.tt-banner .tt-arrow{font-size:14px;opacity:0.8;}
+.hero{background:linear-gradient(160deg,#dbeeff 0%,#c8e4f8 40%,#b8d8f5 100%);padding:18px 20px 20px;position:relative;overflow:hidden;text-align:center;}
+.hero::before{content:"🚌";position:absolute;right:-15px;bottom:-15px;font-size:130px;opacity:0.12;transform:rotate(-15deg);pointer-events:none;line-height:1;}
+.hero::after{content:"🚌";position:absolute;left:-20px;top:-5px;font-size:90px;opacity:0.07;transform:rotate(10deg) scaleX(-1);pointer-events:none;line-height:1;}
+.hero-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(74,159,212,0.15);border:1px solid rgba(74,159,212,0.3);border-radius:99px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--navy);margin-bottom:8px;}
+.hero h1{font-size:clamp(19px,4.5vw,24px);font-weight:900;color:var(--navy);line-height:1.3;letter-spacing:-0.03em;margin-bottom:6px;}
+.hero h1 em{font-style:normal;color:var(--blue-dark);}
+.hero-sub{font-size:12px;color:var(--text-mid);line-height:1.5;max-width:340px;margin:0 auto;}
+.notice-bar{background:var(--navy);padding:9px 20px;}
+.notice-title{font-size:9px;font-weight:800;color:var(--sky-deep);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:5px;}
+.notice-line{font-size:11px;color:rgba(255,255,255,.72);line-height:1.5;padding-left:9px;border-left:2px solid var(--blue);margin-bottom:3px;}
+.notice-line:last-child{margin-bottom:0;}
+.tab-wrap{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px;}
+.tab-row{display:flex;max-width:680px;margin:0 auto;gap:4px;padding:8px 0;}
+.tab-btn{flex:1;padding:9px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--bg);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;color:var(--text-light);transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.tab-btn:hover{border-color:var(--blue);color:var(--blue-dark);background:var(--sky);}
+.tab-btn.active{background:linear-gradient(135deg,var(--blue),var(--navy));border-color:var(--navy);color:white;}
+.progress-wrap{background:var(--white);border-bottom:1px solid var(--border);}
+.progress-track{display:flex;max-width:680px;margin:0 auto;padding:0 16px;}
+.prog-step{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px;position:relative;opacity:0.3;transition:opacity 0.25s;}
+.prog-step.active{opacity:1;}
+.prog-step.done{opacity:0.6;}
+.prog-step::after{content:"";position:absolute;bottom:0;left:0;right:0;height:2px;background:transparent;}
+.prog-step.active::after{background:var(--blue);}
+.prog-dot{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--text-light);margin-bottom:3px;transition:all 0.2s;}
+.prog-step.active .prog-dot{background:var(--blue);border-color:var(--blue);color:white;}
+.prog-step.done .prog-dot{background:var(--green);border-color:var(--green);color:white;}
+.prog-label{font-size:10px;color:var(--text-light);font-weight:600;}
+.prog-step.active .prog-label{color:var(--blue-dark);}
+.main{max-width:680px;margin:0 auto;padding:14px 14px 60px;}
+.card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:18px;margin-bottom:12px;box-shadow:var(--shadow);animation:fadeUp 0.22s ease;}
+.step-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.step-row .card{margin-bottom:0;}
+.card-compact{padding:12px 10px;}
+.card-compact .card-title{margin-bottom:8px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.card-eyebrow{font-size:10px;font-weight:800;color:var(--blue);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;}
+.card-title{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:3px;letter-spacing:-0.02em;}
+.card-hint{font-size:12px;color:var(--text-light);margin-bottom:16px;line-height:1.6;}
+.search-inp-wrap{position:relative;}
+.search-inp{width:100%;padding:11px 14px 11px 38px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:"Noto Sans KR",sans-serif;outline:none;background:var(--bg);color:var(--text);transition:all 0.15s;}
+.search-inp:focus{border-color:var(--blue);background:white;box-shadow:0 0 0 3px rgba(74,159,212,0.12);}
+.search-inp::placeholder{color:var(--text-light);}
+.inp-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;fill:var(--text-light);pointer-events:none;}
+.kw-results{margin-top:10px;display:none;}
+.kw-results.show{display:block;}
+.kw-item{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;cursor:pointer;background:var(--white);transition:all 0.15s;}
+.kw-item:hover{border-color:var(--blue);background:var(--sky);}
+.kw-bus{font-size:10px;font-weight:700;color:var(--text-light);margin-bottom:3px;}
+.kw-name{font-size:13px;font-weight:700;color:var(--navy);}
+.kw-loc{font-size:11px;color:var(--text-light);margin-top:2px;}
+.kw-go{background:var(--blue);color:white;border:none;border-radius:var(--radius-xs);padding:5px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;}
+.kw-empty{text-align:center;padding:20px;color:var(--text-light);font-size:13px;}
+.day-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));gap:6px;}
+.day-btn{padding:9px 6px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--bg);cursor:pointer;text-align:center;transition:all 0.15s;font-family:inherit;}
+.day-btn:hover{border-color:var(--blue);background:var(--sky);}
+.day-btn.selected{border-color:var(--blue-dark);background:linear-gradient(135deg,var(--blue) 0%,var(--navy) 100%);}
+.day-main{font-size:13px;font-weight:800;color:var(--navy);letter-spacing:-0.02em;white-space:nowrap;}
+.day-btn.selected .day-main{color:white;}
+.time-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));gap:6px;}
+.time-btn{padding:8px 8px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-family:inherit;text-align:center;transition:all 0.15s;display:flex;flex-direction:column;align-items:center;gap:1px;}
+.time-btn:hover{border-color:var(--blue);background:var(--sky);}
+.time-btn.selected{border-color:var(--blue-dark);background:linear-gradient(135deg,var(--blue),var(--navy));}
+.time-code{font-size:9px;font-weight:800;color:var(--text-light);letter-spacing:0.02em;white-space:nowrap;}
+.time-btn.selected .time-code{color:rgba(255,255,255,.65);}
+.time-val{font-size:13px;font-weight:800;color:var(--navy);letter-spacing:-0.02em;white-space:nowrap;}
+.time-btn.selected .time-val{color:white;}
+.bus-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+.bus-tabs::-webkit-scrollbar{height:4px;}
+.bus-tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+.bus-tab{flex:0 0 auto;padding:10px 18px;border-radius:99px;border:1.5px solid var(--border);background:var(--bg);font-family:inherit;font-size:14px;font-weight:800;color:var(--text-mid);cursor:pointer;white-space:nowrap;transition:all 0.15s;}
+.bus-tab:hover{border-color:var(--blue);background:var(--sky);color:var(--navy);}
+.bus-tab.active{background:linear-gradient(135deg,var(--blue),var(--navy));border-color:var(--navy);color:white;}
+.bus-panel{margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;}
+.stop-btn{padding:10px 12px;border-radius:var(--radius-xs);border:1.5px solid var(--border);background:white;font-size:12px;font-family:inherit;cursor:pointer;color:var(--text);text-align:left;line-height:1.4;transition:all 0.15s;font-weight:500;}
+.stop-btn:hover{border-color:var(--blue);background:var(--sky);color:var(--navy);}
+.stop-btn.selected{border-color:var(--blue-dark);background:linear-gradient(135deg,var(--blue),var(--navy));color:white;}
+.result-wrap{animation:fadeUp 0.3s ease;}
+.result-top{background:linear-gradient(135deg,var(--blue) 0%,var(--navy) 100%);border-radius:var(--radius) var(--radius) 0 0;padding:22px 20px;position:relative;overflow:hidden;}
+.result-top::after{content:"";position:absolute;right:-20px;bottom:-20px;width:110px;height:110px;background:rgba(255,255,255,.08);border-radius:50%;}
+.result-tag{display:inline-block;background:rgba(255,255,255,.2);color:white;font-size:10px;font-weight:800;padding:3px 9px;border-radius:99px;letter-spacing:0.06em;margin-bottom:9px;}
+.result-name{font-size:22px;font-weight:900;color:white;margin-bottom:4px;letter-spacing:-0.03em;}
+.result-bus{font-size:12px;color:rgba(255,255,255,.65);}
+.result-body{background:white;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);margin-bottom:12px;box-shadow:var(--shadow);}
+.info-block{padding:14px 18px;border-bottom:1px solid #f0f7fd;}
+.info-block:last-child{border-bottom:none;}
+.info-block-label{font-size:10px;font-weight:800;color:var(--blue);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px;}
+.time-big-wrap{display:flex;align-items:baseline;gap:6px;}
+.time-big{font-size:34px;font-weight:900;color:var(--navy);letter-spacing:-0.03em;}
+.time-unit{font-size:13px;font-weight:600;color:var(--text-light);}
+.arrive-row{display:flex;justify-content:space-between;align-items:center;margin-top:7px;font-size:13px;}
+.arrive-lbl{color:var(--text-light);}
+.arrive-val{font-weight:800;color:var(--green);}
+.depart-box{background:var(--sky);border:1px solid var(--sky-mid);border-radius:var(--radius-sm);padding:11px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.depart-label{font-size:11px;color:var(--text-light);font-weight:600;}
+.depart-time{font-size:18px;font-weight:900;color:var(--navy);}
+.rv-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#03c75a;color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;text-decoration:none;transition:all 0.15s;margin-top:4px;}
+.rv-btn:hover{background:#02b350;transform:translateY(-1px);box-shadow:0 4px 12px rgba(3,199,90,.25);}
+.rv-btn.off{background:var(--border);color:var(--text-light);cursor:default;pointer-events:none;transform:none;box-shadow:none;}
+.contact-card{background:white;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow);}
+.contact-hd{padding:11px 16px;background:var(--sky);border-bottom:1px solid var(--border);font-size:11px;font-weight:800;color:var(--navy);letter-spacing:0.05em;}
+.contact-row{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid #f5faff;font-size:12px;}
+.contact-row:last-child{border-bottom:none;}
+.contact-role{color:var(--text-light);min-width:130px;}
+.contact-tel{font-weight:700;color:var(--navy);}
+.call-btn{display:inline-flex;align-items:center;gap:4px;background:var(--blue);color:white;border:none;border-radius:var(--radius-xs);padding:5px 10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;text-decoration:none;transition:background .15s;}
+.call-btn:hover{background:var(--navy);}
+.tl-card{background:white;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow);}
+.tl-hd{padding:11px 16px;background:var(--sky);border-bottom:1px solid var(--border);font-size:11px;font-weight:800;color:var(--navy);letter-spacing:0.05em;display:flex;align-items:center;gap:6px;}
+.tl-hint{font-size:10px;font-weight:500;color:var(--text-light);margin-left:4px;}
+.tl-body{padding:6px 14px;}
+.tl-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #f0f7fd;font-size:12px;}
+.tl-row:last-child{border-bottom:none;}
+.tl-dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;margin-top:3px;}
+.tl-dot.mine{background:var(--blue);box-shadow:0 0 0 3px rgba(74,159,212,.2);}
+.tl-dot.last{background:var(--green);}
+.tl-name{flex:1;color:var(--text-mid);line-height:1.4;}
+.tl-name strong{color:var(--blue-dark);font-weight:800;}
+.tl-time{font-weight:800;color:var(--navy);white-space:nowrap;font-size:13px;}
+.tl-row.mine-row{background:var(--sky);margin:0 -14px;padding:7px 14px;}
+.reset-btn{width:100%;padding:13px;border-radius:var(--radius);border:1.5px solid var(--border);background:white;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;color:var(--text-light);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:var(--shadow);}
+.reset-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--sky);}
+footer{text-align:center;padding:20px 16px;font-size:11px;color:var(--text-light);border-top:1px solid var(--border);background:white;line-height:1.8;}
+.hidden{display:none!important;}
+.roadview-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;}
+.roadview-modal.show{display:flex;}
+.roadview-box{background:var(--white);border-radius:var(--radius);overflow:hidden;width:90vw;max-width:600px;box-shadow:0 20px 60px rgba(0,0,0,.4);}
+.roadview-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--navy);color:white;}
+.roadview-title{font-size:13px;font-weight:700;}
+.roadview-close{background:none;border:none;color:white;font-size:20px;cursor:pointer;padding:0 4px;line-height:1;}
+#rvContainer{width:100%;height:300px;}
+.roadview-notice{padding:8px 14px;font-size:11px;color:var(--text-light);background:var(--bg);text-align:center;}
+.rv-tabs{display:flex;background:var(--bg);}
+.rv-tab{flex:1;padding:10px;border:none;background:none;font-family:inherit;font-size:12px;font-weight:700;color:var(--text-light);cursor:pointer;border-bottom:2px solid transparent;}
+.rv-tab.active{color:var(--navy);border-bottom:2px solid var(--navy);}
+#mapContainer{display:none;}
+@media(max-width:480px){.day-grid{grid-template-columns:1fr 1fr;}.time-grid{grid-template-columns:1fr 1fr;}.hero h1{font-size:26px;}}
+</style>
+</head>
+<body>
+<a href="shuttle_timetable_202609.html" target="_blank" class="tt-banner">
+  <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+  전체 셔틀 시간표 바로가기
+  <span class="tt-arrow">→</span>
+</a>
+<header>
+  <div class="logo">
+    <div class="logo-text"><span>중계</span>정상어학원</div>
+  </div>
+  <a href="https://www.gojls.com/branch/junggye" target="_blank" class="header-tag">Homepage</a>
+</header>
+
+<div class="hero">
+  <div class="hero-badge">🚌 중계정상어학원</div>
+  <h1>우리 아이 <em>셔틀 정류장</em> 바로 찾기</h1>
+  <p class="hero-sub">요일과 수업 코드를 선택하면 탑승 정류장과 시간을 알려드려요</p>
+</div>
+
+<div class="notice-bar">
+  <div class="notice-title">셔틀 이용 안내</div>
+  <div class="notice-line">안전하고 효율적인 운행을 위해 지정된 위치에서만 탑승이 가능하며, 탑승 시간 5분 전 미리 대기 부탁드립니다.</div>
+  <div class="notice-line">탑승 지점 확인을 위해 사전에 셔틀기사님/선생님과 통화하여 정확한 시간 및 위치를 안내 받으시길 바랍니다.</div>
+  <div class="notice-line">학원 미탑승시 정상셔틀 앱에서 '안타요' 기능을 이용해주세요.</div>
+</div>
+
+<div class="tab-wrap">
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="switchTab('dong')">🏫 등원 (학원 가는 버스)</button>
+    <button class="tab-btn" onclick="switchTab('haw')">🏠 하원 (집에 가는 버스)</button>
+  </div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-track">
+    <div class="prog-step active" id="pd1"><div class="prog-dot">1</div><div class="prog-label">요일</div></div>
+    <div class="prog-step" id="pd2"><div class="prog-dot">2</div><div class="prog-label">코드</div></div>
+    <div class="prog-step" id="pd3"><div class="prog-dot">3</div><div class="prog-label">정류장</div></div>
+    <div class="prog-step" id="pd4"><div class="prog-dot" id="pd4num">4</div><div class="prog-label">결과</div></div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="card">
+    <div class="card-eyebrow">Smart Search</div>
+    <div class="card-title">내 주변 정류장 바로 찾기</div>
+    <div class="card-hint">아파트 · 학교 · 역 · 건물 이름으로 검색하고 정류장을 선택하면 요일/코드를 안 골라도 바로 결과를 보여드려요 (필요하면 아래에서 요일·코드를 바꿀 수 있어요)</div>
+    <div class="search-inp-wrap">
+      <svg class="inp-ico" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input class="search-inp" type="text" id="kwSearch" placeholder="예: 덕암초, 마들역, 롯데캐슬, 중계동..." oninput="searchKeyword(this.value)">
+    </div>
+    <div class="kw-results" id="kwResults"></div>
+  </div>
+
+  <div class="step-row">
+    <div class="card card-compact" id="sec1">
+      <div class="card-eyebrow">Step 01</div>
+      <div class="card-title">수업 요일</div>
+      <div class="day-grid">
+        <button class="day-btn" data-day="mwf"><div class="day-main">월·수·금</div></button>
+        <button class="day-btn" data-day="tt"><div class="day-main">화·목</div></button>
+      </div>
+    </div>
+
+    <div class="card card-compact hidden" id="sec2">
+      <div class="card-eyebrow">Step 02</div>
+      <div class="card-title">수업 코드</div>
+      <div class="time-grid" id="timeChoices"></div>
+    </div>
+  </div>
+
+  <div class="card hidden" id="sec3">
+    <div class="card-eyebrow">Step 03</div>
+    <div class="card-title">가장 가까운 정류장을 선택해주세요</div>
+    <div class="card-hint">호차 탭을 클릭하면 정류장 목록이 아래에 나타나요</div>
+    <div class="bus-tabs" id="busTabs"></div>
+    <div class="bus-panel" id="busPanel"></div>
+  </div>
+
+  <div id="resultArea" class="hidden result-wrap">
+    <div class="result-top">
+      <div class="result-tag" id="rTag">MY STOP</div>
+      <div class="result-name" id="rName">—</div>
+      <div class="result-bus" id="rBus">—</div>
+    </div>
+    <div class="result-body">
+      <div class="info-block" id="timeBlock">
+        <div class="info-block-label">🕐 탑승 시간</div>
+        <div class="time-big-wrap"><div class="time-big" id="rTime">—</div><div class="time-unit">탑승</div></div>
+        <div class="arrive-row"><span class="arrive-lbl">학원 도착</span><span class="arrive-val" id="rArrive">—</span></div>
+        <div class="arrive-row" style="margin-top:4px;"><span class="arrive-lbl">소요시간</span><span class="arrive-val" id="rDuration" style="color:var(--blue-dark);">—</span></div>
+      </div>
+      <div class="info-block hidden" id="departBlock">
+        <div class="info-block-label">🏫 학원 출발 시간</div>
+        <div class="depart-box"><span class="depart-label">학원에서 출발</span><span class="depart-time" id="rDepart">—</span></div>
+        <div class="arrive-row" style="margin-top:8px;"><span class="arrive-lbl">내 정류장 도착</span><span class="arrive-val" id="rTime2">—</span></div>
+        <div class="arrive-row" style="margin-top:4px;"><span class="arrive-lbl">소요시간</span><span class="arrive-val" id="rDuration2" style="color:var(--blue-dark);">—</span></div>
+      </div>
+      <div class="info-block" id="locBlock">
+        <div class="info-block-label" id="locLabel">👁️ 로드뷰로 위치 확인</div>
+        <a id="rvBtn" href="#" target="_blank" class="rv-btn">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:white"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+          로드뷰로 위치 확인
+        </a>
+      </div>
+    </div>
+
+    <div class="contact-card">
+      <div class="contact-hd">📞 담당 기사님 · 선생님 연락처</div>
+      <div id="contactBody"></div>
+    </div>
+
+    <div class="tl-card">
+      <div class="tl-hd" id="tlTitle">🚌 전체 노선 시간표 <span class="tl-hint">· 파란색이 내 정류장</span></div>
+      <div class="tl-body" id="tlBody"></div>
+    </div>
+
+    <button class="reset-btn" onclick="resetAll()">
+      <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+      처음부터 다시 선택하기
+    </button>
+  </div>
+</div>
+
+<footer>
+  중계정상어학원 · 셔틀 노선 안내<br>
+  문의: 02-973-0097 · 평일 13:00–21:00
+</footer>
+
+<div class="roadview-modal" id="rvModal" onclick="closeRV(event)">
+  <div class="roadview-box">
+    <div class="roadview-header">
+      <span class="roadview-title" id="rvModalTitle">로드뷰</span>
+      <button class="roadview-close" onclick="closeRVBtn()">×</button>
+    </div>
+    <div class="rv-tabs">
+      <button class="rv-tab active" id="tabRV" onclick="switchRVTab('rv')">🚶 로드뷰</button>
+      <button class="rv-tab" id="tabMap" onclick="switchRVTab('map')">🗺️ 지도(위치 확인)</button>
+    </div>
+    <div id="rvContainer"></div>
+    <div id="mapContainer"></div>
+    <div class="roadview-notice">📍 실제 탑승 위치와 약간 다를 수 있어요. 참고용으로 활용해주세요.</div>
+  </div>
+</div>
+
+<script>
+const buses = {
+  bus1:{
+    name:"1호차", driver:"김성용 기사님",
+    tel:{driver:"010-5230-1884", mwf:"010-3008-0498", tt:"010-3370-1836"},
+    dong:{stops:[
+        {name:"롯데캐슬 시그니처",rv:"https://naver.me/5IffJ6sZ",loc:"롯데캐슬시그니처 앞 정류장",kw:"롯데캐슬,시그니처,덕암초,서울덕암초등학교,신상계초,서울신상계초등학교,상경초,서울상경초등학교,재현중,재현중학교,상계동,당고개역"},
+        {name:"불암대림아파트 건너편",rv:"https://naver.me/GM33sc0Z",loc:"불암대림아파트 건너편 정류장",kw:"불암대림,대림아파트,덕암초,신상계초,상경초,재현중,재현중학교,상계역,상계동"},
+        {name:"수암약국 건너편",rv:"https://naver.me/5yhhHw2G",loc:"수암약국 건너편 정류장",kw:"수암약국,중계초,서울중계초등학교,중계중,수암초,서울수암초등학교,상계제일중,상계제일중학교,꿈에그린아파트,은행사거리,중계동"},
+        {name:"중계 염광/현대A 입구",rv:"https://naver.me/FnssJAKk",loc:"중계 염광/현대A 입구 정류장",kw:"염광아파트,중계현대아파트,원광초,서울원광초등학교,중계중,상계제일중,상계제일중학교,양지대림,은행사거리,중계동"},
+        {name:"중계벽산A(재활용센터)",rv:"https://naver.me/GxrrfCQI",loc:"중계벽산A(재활용센터) 정류장",kw:"중계벽산,벽산아파트,재활용센터,원광초,서울원광초등학교,중계중,중계동"},
+        {name:"우성3차A",rv:"https://naver.me/GKIITass",loc:"우성3차A 정류장",kw:"우성3차,우성아파트,을지초,서울을지초등학교,을지중,은행사거리,중계동"},
+        {name:"중계 청구3차A",rv:"https://naver.me/GnttlOx0",loc:"중계 청구3차A 정류장",kw:"청구3차,청구아파트,을지초,서울을지초등학교,을지중,중계동"},
+        {name:"신안동진A 앞",rv:"https://naver.me/GRDDhpUg",loc:"신안동진A 앞 정류장",kw:"신안동진,동진아파트,불암초,서울불암초등학교,을지중,은행사거리,중계동"},
+        {name:"노원문화예술원",rv:"https://naver.me/GRDDhl8X",loc:"노원문화예술원 앞 정류장",kw:"노원문화예술원,불암초,서울불암초등학교,문화예술회관,중계동"},
+        {name:"중계어린이집",rv:"https://naver.me/FlBBpgE7",loc:"중계어린이집 앞 정류장",kw:"중계어린이집,수암초,서울수암초등학교,불암초,중계동"},
+        {name:"불암고",rv:"https://naver.me/GB33SmO3",loc:"불암고 앞 정류장",kw:"불암고,불암고등학교,수암초,서울수암초등학교,불암중,중계동,하계동"},
+        {name:"대림벽산 버스정류장",rv:"https://naver.me/5B00dbQd",loc:"대림벽산 버스정류장 정류장",kw:"대림벽산,벽산아파트,불암중,불암중학교,중계주공6단지,하계동"},
+        {name:"롯데우성A(꿈동산어린이집)",rv:"https://naver.me/GEddNPD1",loc:"롯데우성A(꿈동산어린이집) 정류장",kw:"롯데우성,꿈동산어린이집,불암중,불암중학교,한별중,한별중학교,중계주공10단지,하계동"},
+        {name:"하계현대 2차아파트",rv:"https://naver.me/IIDDsJXI",loc:"하계현대 2차아파트 정류장",kw:"하계현대,현대2차,한별중,한별중학교,하계중,하계중학교,하계동,하계역"}
+      ],times:{mwf:{"14:30":{"t":["13:55","13:58","14:00","14:03","14:04","14:04","14:05","14:07","14:08","14:09","14:09","14:10","14:12","14:13"],"a":"14:25"},"15:50":{"t":["15:10","15:12","15:15","15:17","15:17","15:18","15:20","15:22","15:23","15:23","15:24","15:26","15:28","15:30"],"a":"15:42"},"17:30":{"t":["16:55","16:57","16:59","16:59","17:00","17:02","17:04","17:06","17:08","17:08","17:09","17:10","17:11","17:13"],"a":"17:25"},"19:10":{"t":["18:35","18:40","18:42","18:43","18:45","18:48","18:50","18:51","18:52","18:53","18:54","18:55","18:57","18:58"],"a":"19:03"}},tt:{"15:40":{"t":["15:05","15:07","15:08","15:09","15:10","15:11","15:13","15:14","15:15","15:16","15:17","15:19","15:22","15:24"],"a":"15:35"},"18:20":{"t":["17:40","17:42","17:42","17:44","17:45","17:47","17:50","17:52","17:52","17:53","17:54","17:56","17:58","18:00"],"a":"18:05"}}}},
+    haw:{stops:[
+        {name:"하계현대 2차아파트",loc:"하계현대2차A 건너편 롯데마트 주차장 입구",rv:"https://map.naver.com/v5/?c=127.07075,37.64498,17,0,0,0,dh&mode=roadview",lat:"37.64498",lng:"127.07075"},
+        {name:"롯데우성A(꿈동산어린이집)",loc:"롯데우성A 건너편 영복교회 앞",rv:"https://map.naver.com/v5/?c=127.0737,37.64764,17,0,0,0,dh&mode=roadview",lat:"37.64764",lng:"127.0737"},
+        {name:"대림벽산 버스정류장",loc:"대림벽산A 건너편 대림 벽산 상가",rv:"https://map.naver.com/v5/?c=127.07752999999998,37.64802,17,0,0,0,dh&mode=roadview",lat:"37.64802",lng:"127.07752999999998"},
+        {name:"불암고",loc:"불암고 건너편 수암초 근처 횡단보도",rv:"https://map.naver.com/v5/?c=127.08068,37.64851999999999,17,0,0,0,dh&mode=roadview",lat:"37.64851999999999",lng:"127.08068"},
+        {name:"중계어린이집",loc:"중계어린이집 건너편 정육점 앞",rv:"https://map.naver.com/v5/?c=127.08102712892928,37.65003622457289,17,0,0,0,dh&mode=roadview",lat:"37.65003622457289",lng:"127.08102712892928"},
+        {name:"노원문화예술원",loc:"노원문화예술원 건너편 상가 앞",rv:"https://map.naver.com/v5/?c=127.08044,37.65048,17,0,0,0,dh&mode=roadview",lat:"37.65048",lng:"127.08044"},
+        {name:"신안동진A 앞",loc:"신안동진A 건너편 상가 앞",rv:"https://map.naver.com/v5/?c=127.07850638157362,37.65055824662455,17,0,0,0,dh&mode=roadview",lat:"37.65055824662455",lng:"127.07850638157362"},
+        {name:"중계 청구3차A",loc:"중계 청구3차A 건너편 버스정류장",rv:"https://map.naver.com/v5/?c=127.07419000000002,37.650619999999996,17,0,0,0,dh&mode=roadview",lat:"37.650619999999996",lng:"127.07419000000002"},
+        {name:"우성3차A",loc:"우성3차A 건너편 버스정류장",rv:"https://map.naver.com/v5/?c=127.07350000000001,37.652499999999996,17,0,0,0,dh&mode=roadview",lat:"37.652499999999996",lng:"127.07350000000001"},
+        {name:"중계벽산A(재활용센터)",loc:"중계벽산A 건너편 횡단보도",rv:"https://map.naver.com/v5/?c=127.0741,37.65457,17,0,0,0,dh&mode=roadview",lat:"37.65457",lng:"127.0741"},
+        {name:"중계 염광/현대A 입구",loc:"염광/현대A 건너편 주공3단지 횡단보도",rv:"https://map.naver.com/v5/?c=127.07456999999998,37.65647,17,0,0,0,dh&mode=roadview",lat:"37.65647",lng:"127.07456999999998"},
+        {name:"수암약국 건너편",loc:"수암약국 건너편 컴포즈 앞",rv:"https://map.naver.com/v5/?c=127.07527,37.65956999999999,17,0,0,0,dh&mode=roadview",lat:"37.65956999999999",lng:"127.07527"},
+        {name:"불암대림아파트 건너편",loc:"불암대림아파트 건너편 미장원 앞",rv:"https://map.naver.com/v5/?c=127.076,37.663470000000004,17,0,0,0,dh&mode=roadview",lat:"37.663470000000004",lng:"127.076"},
+        {name:"롯데캐슬 시그니처",loc:"롯데캐슬시그니처 건너편 동물병원 앞",rv:"https://map.naver.com/v5/?c=127.07697000000002,37.664909999999985,17,0,0,0,dh&mode=roadview",lat:"37.664909999999985",lng:"127.07697000000002"}
+      ],times:{mwf:{"14:30":{"t":["15:57","15:58","16:00","16:01","16:02","16:03","16:03","16:05","16:07","16:08","16:09","16:12","16:13","16:15"],"d":"15:50"},"15:50":{"t":["17:37","17:39","17:40","17:41","17:42","17:43","17:43","17:45","17:47","17:48","17:49","17:52","17:53","17:55"],"d":"17:30"},"17:30":{"t":["19:16","19:18","19:20","19:21","19:22","19:23","19:23","19:25","19:30","19:32","19:33","19:35","19:37","19:40"],"d":"19:10"},"19:10":{"t":["21:05","21:06","21:08","21:09","21:10","21:11","21:12","21:13","21:15","21:18","21:20","21:21","21:23","21:28"],"d":"21:00"}},tt:{"15:40":{"t":["18:31","18:33","18:36","18:38","18:39","18:40","18:41","18:42","18:44","18:45","18:46","18:47","18:48","18:50"],"d":"18:20"},"18:20":{"t":["21:05","21:07","21:09","21:11","21:12","21:13","21:13","21:15","21:18","21:20","21:21","21:23","21:23","21:25"],"d":"21:00"}}}}
+  },
+  bus3:{
+    name:"3호차", driver:"김현국 기사님",
+    tel:{driver:"010-7720-3835", mwf:"010-5414-2977", tt:"010-9700-7836"},
+    dong:{stops:[
+        {name:"신안아파트3차(103동 앞)",rv:"https://naver.me/xVRFtONa",loc:"신안아파트3차 구립 노인정",kw:"신안아파트,신안3차,103동,태릉중,태릉중학교,묵현초,서울묵현초등학교,당현초,서울당현초등학교,신묵초,공릉동"},
+        {name:"먹골역1번출구(파리바게트)",rv:"https://naver.me/FyAQLllx",loc:"먹골역 근처 파리바게트",kw:"먹골역,신묵초,서울신묵초등학교,묵현초,서울묵현초등학교,파리바게트,묵동,중랑구"},
+        {name:"묵동자이아파트(말동상 맞은편 이디야)",rv:"https://naver.me/IDkguqZU",loc:"묵동자이아파트 이디야",kw:"묵동자이,자이아파트,신묵초,서울신묵초등학교,묵현초,서울묵현초등학교,이디야,먹골역,묵동"},
+        {name:"태릉입구역(5번출구)",rv:"https://naver.me/5nhv50l9",loc:"태릉입구역 5번 출구",kw:"태릉입구역,5번출구,공릉초,서울공릉초등학교,태릉중,태릉중학교,육사,공릉동"},
+        {name:"태릉역 신한은행",rv:"https://naver.me/x7egpoy2",loc:"태릉입구역 신한은행",kw:"태릉입구역,신한은행,공릉초,서울공릉초등학교,공릉동"},
+        {name:"공릉역 1번출구(던킨도너츠)",rv:"https://naver.me/FaepLvsY",loc:"공릉역 근처 보승회관",kw:"공릉역,공연초,서울공연초등학교,공릉중,공릉중학교,던킨도너츠,공릉동"},
+        {name:"노원문화원",rv:"https://naver.me/Gy3DhPxy",loc:"노원문화원 앞 정류장",kw:"노원문화원,공연초,서울공연초등학교,공릉중,공릉중학교,용원초,서울용원초등학교,공릉동"},
+        {name:"풍림아파트(건너편정류장)",rv:"https://naver.me/GjyKD2xS",loc:"풍림아파트 건너편 정류장",kw:"풍림아파트,용원초,서울용원초등학교,중현초,서울중현초등학교,공릉동"},
+        {name:"장미아파트 604동",rv:"https://naver.me/FqIGNRXw",loc:"장미아파트 앞 버스정류장",kw:"장미아파트,604동,중현초,서울중현초등학교,용원초,공릉동"},
+        {name:"한신청구아파트(후문)",rv:"https://naver.me/GP2yNa1g",loc:"한신청구아파트 후문",kw:"한신청구,청구아파트,후문,중현초,서울중현초등학교,한신초,서울한신초등학교,공릉동,하계동"}
+      ],times:{mwf:{"14:30":{"t":["14:00","14:02","14:03","14:07","14:09","14:13","14:13","14:15","14:18","14:19"],"a":"14:28"},"15:50":{"t":["15:15","15:17","15:19","15:24","15:24","15:27","15:28","15:30","15:31","15:36"],"a":"15:40"},"17:30":{"t":["16:50","16:52","16:53","17:00","17:02","17:04","17:05","17:07","17:09","17:13"],"a":"17:20"},"19:10":{"t":["18:30","18:32","18:33","18:37","18:38","18:40","18:45","18:47","18:49","18:53"],"a":"19:00"}},tt:{"15:40":{"t":["15:00","15:02","15:03","15:07","15:08","15:10","15:15","15:17","15:19","15:23"],"a":"15:30"},"18:20":{"t":["17:30","17:32","17:33","17:37","17:38","17:40","17:45","17:47","17:49","17:53"],"a":"18:10"}}}},
+    haw:{stops:[
+        {name:"한신청구아파트(후문)",loc:"한신청구아파트",rv:"https://map.naver.com/v5/?c=127.06835113293985,37.63910180120095,17,0,0,0,dh&mode=roadview",lat:"37.63910180120095",lng:"127.06835113293985"},
+        {name:"장미아파트 604동",loc:"장미아파트 건너편 버스정류장",rv:"https://map.naver.com/v5/?c=127.06648,37.63402,17,0,0,0,dh&mode=roadview",lat:"37.63402",lng:"127.06648"},
+        {name:"풍림아파트(건너편정류장)",loc:"풍림아파트 근처 파리바게뜨",rv:"https://map.naver.com/v5/?c=127.06865,37.62865,17,0,0,0,dh&mode=roadview",lat:"37.62865",lng:"127.06865"},
+        {name:"공릉문화원",loc:"노원문화원 건너편 정류장",rv:"https://map.naver.com/v5/?c=127.06979146651032,37.628508747407984,17,0,0,0,dh&mode=roadview",lat:"37.628508747407984",lng:"127.06979146651032"},
+        {name:"공릉역 1번출구(던킨도너츠)",loc:"공릉역 근처 CU",rv:"https://map.naver.com/v5/?c=127.07292,37.62609,17,0,0,0,dh&mode=roadview",lat:"37.62609",lng:"127.07292"},
+        {name:"태릉역 신한은행",loc:"태릉입구역 스타벅스",rv:"https://map.naver.com/v5/?c=127.07469,37.62091,17,0,0,0,dh&mode=roadview",lat:"37.62091",lng:"127.07469"},
+        {name:"태릉입구역(5번출구)",loc:"태릉입구역 2번 출구",rv:"https://map.naver.com/v5/?c=127.07563,37.61827,17,0,0,0,dh&mode=roadview",lat:"37.61827",lng:"127.07563"},
+        {name:"먹골역1번출구(던킨)",loc:"먹골역 건너편 던킨도너츠",rv:"https://map.naver.com/v5/?c=127.07749779307073,37.612314318587586,17,0,0,0,dh&mode=roadview",lat:"37.612314318587586",lng:"127.07749779307073"},
+        {name:"묵동자이아파트(BYC)",loc:"묵동자이아파트 이디야",rv:"https://map.naver.com/v5/?c=127.07678927455936,37.61443886230262,17,0,0,0,dh&mode=roadview",lat:"37.61443886230262",lng:"127.07678927455936"},
+        {name:"신안아파트3차(103동 앞)",loc:"신안아파트3차 정문",rv:"https://map.naver.com/v5/?c=127.08143,37.61235,17,0,0,0,dh&mode=roadview",lat:"37.61235",lng:"127.08143"}
+      ],times:{mwf:{"14:30":{"t":["15:57","16:00","16:03","16:04","16:05","16:08","16:08","16:14","16:16","16:18"],"d":"15:50"},"15:50":{"t":["17:37","17:36","17:38","17:40","17:43","17:46","17:46","17:51","17:53","17:55"],"d":"17:30"},"17:30":{"t":["19:17","19:19","19:21","19:23","19:26","19:28","19:30","19:37","19:38","19:40"],"d":"19:10"},"19:10":{"t":["21:07","21:11","21:13","21:15","21:18","21:21","21:21","21:26","21:28","21:30"],"d":"21:00"}},tt:{"15:40":{"t":["18:27","18:31","18:33","18:35","18:38","18:41","18:41","18:46","18:48","18:50"],"d":"18:20"},"18:20":{"t":["21:07","21:11","21:13","21:15","21:18","21:21","21:21","21:26","21:28","21:30"],"d":"21:00"}}}}
+  },
+  bus2:{
+    name:"2호차", driver:"김왕건 기사님",
+    tel:{driver:"010-3636-3722", mwf:"010-9097-3168", tt:"010-5434-6948"},
+    dong:{stops:[
+        {name:"상계주공 11단지 1112동 앞 CU편의점",rv:"https://naver.me/5B0mdpvl",loc:"상계주공 1112동 앞 CU",kw:"상계주공,주공11단지,CU,동일초,서울동일초등학교,당현초,서울당현초등학교,상경초,서울상경초등학교,계상초,서울계상초등학교,마들역,상계동"},
+        {name:"마들역(상계주공 11단지 후문)",rv:"https://naver.me/FBMKVNIc",loc:"상계주공 11단지 후문",kw:"마들역,상계주공,주공11단지,동일초,서울동일초등학교,당현초,서울당현초등학교,상경초,서울상경초등학교,계상초,서울계상초등학교,후문,상계동"},
+        {name:"상원초등학교",rv:"https://naver.me/F05Qioir",loc:"상원초 후문 앞",kw:"상원초,서울상원초등학교,청원초,서울청원초등학교,청원중,청원중학교,상계동"},
+        {name:"온곡초등학교(정문)",rv:"https://naver.me/5MvhyprE",loc:"온곡초 정문 앞",kw:"온곡초,서울온곡초등학교,상원초,청원중,청원중학교,한신아파트,상계동"},
+        {name:"상곡초등학교",rv:"https://naver.me/54Km7Sr9",loc:"상곡초 건너편 버스정류장",kw:"상곡초,서울상곡초등학교,중계초,중계동"},
+        {name:"꽃동산교회(맞은편)",rv:"https://naver.me/xEXNlDP8",loc:"꽃동산교회 건너편 상가 앞",kw:"꽃동산교회,상수초,서울상수초등학교,신상중,신상중학교,청원중,청원중학교,노원역,중계동"},
+        {name:"코오롱아파트 건너편",rv:"https://naver.me/GQGtevFp",loc:"코오롱아파트 앞",kw:"코오롱아파트,코오롱,상계중,상계중학교,중계동"},
+        {name:"양지대림A(201동)",rv:"https://naver.me/56XFJuJX",loc:"양지대림아파트 건너편",kw:"양지대림,대림아파트,201동,을지초,서울을지초등학교,을지중,을지중학교,중계동"},
+        {name:"중계성원A(을지중학교)",rv:"https://naver.me/xSBD96Cx",loc:"까사미아 앞",kw:"중계성원,을지중,을지중학교,을지초,서울을지초등학교,까사미아,하이마트,중계동"},
+        {name:"상명초등학교",rv:"https://naver.me/GUT06rMr",loc:"상명초 앞",kw:"상명초,서울상명초등학교,상명중,상명중학교,중계동"},
+        {name:"청계초등학교(구. 고운유치원)",rv:"https://naver.me/5HyuKG9k",loc:"청계초 정문 앞",kw:"청계초,서울청계초등학교,고운유치원,대진여고,중원중,중원중학교,중계역,중계동"},
+        {name:"무지개A(212동옆 횡단보도)",rv:"https://naver.me/F1a8Qh7E",loc:"무지개아파트 211동 앞",kw:"무지개아파트,212동,청계초,서울청계초등학교,중원중,중원중학교,중계동"},
+        {name:"용동초등학교(버스정류장)",rv:"https://naver.me/FbVFb6L3",loc:"용동초 앞",kw:"용동초,서울용동초등학교,중평중,중계동,하계동"}
+      ],times:{mwf:{"14:30":{"t":["13:48","13:50","13:52","13:55","14:00","14:05","14:07","14:09","14:11","14:15","14:15","14:17","14:19"],"a":"14:25"},"15:50":{"t":["15:03","15:05","15:07","15:10","15:15","15:20","15:24","15:26","15:28","15:30","15:32","15:34","15:36"],"a":"15:45"},"17:30":{"t":["16:48","16:50","16:52","16:55","16:59","17:05","17:07","17:08","17:10","17:12","17:14","17:16","17:20"],"a":"17:25"},"19:10":{"t":["18:28","18:30","18:32","18:35","18:40","18:45","18:46","18:48","18:48","18:50","18:52","18:55","18:55"],"a":"19:03"}},tt:{"15:40":{"t":["14:53","14:55","14:57","15:03","15:07","15:12","15:14","15:16","15:18","15:20","15:22","15:24","15:26"],"a":"15:35"},"18:20":{"t":["17:35","17:37","17:40","17:42","17:45","17:50","17:52","17:54","17:56","17:58","18:00","18:02","18:04"],"a":"18:10"}}}},
+    haw:{stops:[
+        {name:"용동초등학교(버스정류장)",loc:"용동초 건너편",rv:"https://map.naver.com/v5/?c=127.06909591845563,37.64198451762297,17,0,0,0,dh&mode=roadview",lat:"37.64198451762297",lng:"127.06909591845563"},
+        {name:"무지개A(212동옆 횡단보도)",loc:"무지개아파트 건너편 횡단보도",rv:"https://map.naver.com/v5/?c=127.06794371466533,37.64271948890573,17,0,0,0,dh&mode=roadview",lat:"37.64271948890573",lng:"127.06794371466533"},
+        {name:"청계초등학교(구. 고운유치원)",loc:"청계초 건너편",rv:"https://map.naver.com/v5/?c=127.06686,37.64476,17,0,0,0,dh&mode=roadview",lat:"37.64476",lng:"127.06686"},
+        {name:"상명초등학교",loc:"상명초 건너편",rv:"https://map.naver.com/v5/?c=127.06822625350712,37.64812072320237,17,0,0,0,dh&mode=roadview",lat:"37.64812072320237",lng:"127.06822625350712"},
+        {name:"중계성원A(까사미아)",loc:"까사미아 건너편 횡단보도",rv:"https://map.naver.com/v5/?c=127.07144102404963,37.65054696967446,17,0,0,0,dh&mode=roadview",lat:"37.65054696967446",lng:"127.07144102404963"},
+        {name:"양지대림A(201동)",loc:"양지대림 앞 201동",rv:"https://map.naver.com/v5/?c=127.07162128147286,37.65240288487665,17,0,0,0,dh&mode=roadview",lat:"37.65240288487665",lng:"127.07162128147286"},
+        {name:"코오롱아파트",loc:"코오롱아파트 건너편",rv:"https://map.naver.com/v5/?c=127.06964168529909,37.65312710864601,17,0,0,0,dh&mode=roadview",lat:"37.65312710864601",lng:"127.06964168529909"},
+        {name:"꽃동산교회(맞은편)",loc:"꽃동산교회 앞",rv:"https://map.naver.com/v5/?c=127.06738452662702,37.65397984799126,17,0,0,0,dh&mode=roadview",lat:"37.65397984799126",lng:"127.06738452662702"},
+        {name:"상곡초등학교",loc:"포레나아파트 정문 후문",rv:"https://map.naver.com/v5/?c=127.06181318176222,37.66238230158063,17,0,0,0,dh&mode=roadview",lat:"37.66238230158063",lng:"127.06181318176222"},
+        {name:"온곡초등학교(정문)",loc:"온곡초 건너편",rv:"https://map.naver.com/v5/?c=127.06654590814931,37.6666424919454,17,0,0,0,dh&mode=roadview",lat:"37.6666424919454",lng:"127.06654590814931"},
+        {name:"상원초등학교",loc:"상원초 건너편 횡단보도",rv:"https://map.naver.com/v5/?c=127.05983738222388,37.66828474399341,17,0,0,0,dh&mode=roadview",lat:"37.66828474399341",lng:"127.05983738222388"},
+        {name:"상계주공 11단지 후문",loc:"마들역 8번출구 우리은행",rv:"https://map.naver.com/v5/?c=127.05542,37.66708,17,0,0,0,dh&mode=roadview",lat:"37.66708",lng:"127.05542"},
+        {name:"상계주공 11단지 1112동 앞 CU편의점",loc:"마들역 8번출구 우리은행",rv:"https://map.naver.com/v5/?c=127.05209792534974,37.66704956833443,17,0,0,0,dh&mode=roadview",lat:"37.66704956833443",lng:"127.05209792534974"}
+      ],times:{mwf:{"14:30":{"t":["15:55","15:57","15:58","16:00","16:02","16:03","16:05","16:07","16:15","16:19","16:21","16:22","16:24"],"d":"15:50"},"15:50":{"t":["17:35","17:37","17:38","17:40","17:42","17:43","17:45","17:47","17:55","17:59","18:01","18:02","18:04"],"d":"17:30"},"17:30":{"t":["19:15","19:17","19:18","19:20","19:22","19:23","19:25","19:27","19:35","19:39","19:41","19:42","19:44"],"d":"19:10"},"19:10":{"t":["21:05","21:07","21:08","21:10","21:12","21:13","21:15","21:17","21:25","21:29","21:31","21:32","21:34"],"d":"21:00"}},tt:{"15:40":{"t":["18:25","18:27","18:28","18:30","18:32","18:33","18:35","18:37","18:45","18:49","18:51","18:52","18:54"],"d":"18:20"},"18:20":{"t":["21:05","21:07","21:08","21:10","21:12","21:13","21:15","21:17","21:25","21:29","21:31","21:32","21:34"],"d":"21:00"}}}}
+  },
+  bus5:{
+    name:"5호차", driver:"박용화 기사님",
+    tel:{driver:"010-7133-0639", mwf:"010-7156-7317", tt:"010-4797-3631"},
+    dong:{stops:[
+        {name:"상수초등학교(아라유치원)",rv:"https://naver.me/5dhcqXsR",loc:"상수초 건너편",kw:"상수초,서울상수초등학교,아라유치원,신상중,신상중학교,노원역,상계동"},
+        {name:"상계 주공A 우리은행",rv:"https://naver.me/5FDUiOJr",loc:"상계 주공A 우리은행 앞",kw:"상계주공,우리은행,상수초,서울상수초등학교,노원중,노원중학교,노원역,상계동"},
+        {name:"노원중학교",rv:"https://naver.me/FwG941r8",loc:"노원중학교 앞",kw:"노원중,노원중학교,상천초,서울상천초등학교,중계동"},
+        {name:"미도아파트(정문건너편)",rv:"https://naver.me/xy7HP9kf",loc:"미도아파트 정문 건너편",kw:"미도아파트,상천초,서울상천초등학교,노원중,중계동"},
+        {name:"중계 센트럴아파트(테니스장)",rv:"https://naver.me/5imZLyq4",loc:"중계 센트럴아파트 테니스장 앞",kw:"센트럴아파트,중계센트럴,테니스장,청계초,서울청계초등학교,중원중,중원중학교,중계역,중계동"},
+        {name:"서울아이티고등학교앞(CU)",rv:"https://naver.me/F6Q5kqG9",loc:"서울 아이티고 CU 앞",kw:"서울아이티고,아이티고,IT고,중원중,중원중학교,중계그린아파트,CU,중계동"},
+        {name:"롯데/경남/상아A(꽃집앞)",rv:"https://naver.me/xIF3qdfX",loc:"롯데/경남/상아 아파트 꽃집 앞",kw:"롯데경남상아,롯데아파트,경남아파트,상아아파트,중평초,서울중평초등학교,중평중,중평중학교,중계동"},
+        {name:"하계현대우성아파트(건너편 정류장)",rv:"https://naver.me/xhPhdHOM",loc:"하계현대우성아파트 건너편 정류장",kw:"하계현대우성,현대우성,중평초,서울중평초등학교,중평중,중평중학교,연촌초,하계중,하계중학교,하계동"},
+        {name:"벽산 상가",rv:"https://naver.me/GEdteA6h",loc:"벽산 상가 버스정류장 앞",kw:"벽산상가,극동건영,벽산아파트,연촌초,서울연촌초등학교,한별중,한별중학교,하계중,하계중학교,하계역,하계동"},
+        {name:"학여울 청구아파트(후문)",rv:"https://naver.me/GB34Of6o",loc:"학여울 청구아파트 후문 앞",kw:"학여울청구,청구아파트,후문,한별중,한별중학교,한신초,서울한신초등학교,하계동"},
+        {name:"학여울 청구아파트(정문)",rv:"https://naver.me/GsBAx4WS",loc:"학여울 청구아파트 정문 앞",kw:"학여울청구,청구아파트,정문,한별중,한별중학교,한신초,서울한신초등학교,하계동"},
+        {name:"연세유치원(앞)",rv:"https://naver.me/Frig986V",loc:"연세유치원 앞",kw:"연세유치원,한신초,서울한신초등학교,한별중,하계동"},
+        {name:"노원우주학교",rv:"https://naver.me/5GcwVDFo",loc:"노원우주학교 앞",kw:"노원우주학교,우주학교,한신초,서울한신초등학교,한천중,한천중학교,하계동"}
+      ],times:{mwf:{"14:30":{"t":["13:50","13:55","14:00","14:03","14:06","14:08","14:10","14:12","14:13","14:14","14:15","14:18","14:20"],"a":"14:25"},"15:50":{"t":["15:10","15:13","15:15","15:17","15:20","15:22","15:23","15:25","15:28","15:29","15:30","15:32","15:34"],"a":"15:40"},"17:30":{"t":["16:50","16:55","17:00","17:03","17:06","17:08","17:10","17:12","17:13","17:14","17:15","17:18","17:20"],"a":"17:25"},"19:10":{"t":["18:27","18:32","18:34","18:37","18:38","18:40","18:43","18:44","18:46","18:46","18:48","18:49","18:52"],"a":"19:05"}},tt:{"15:40":{"t":["15:00","15:03","15:05","15:07","15:10","15:13","15:15","15:16","15:17","15:18","15:20","15:21","15:22"],"a":"15:35"},"18:20":{"t":["17:30","17:33","17:35","17:37","17:40","17:42","17:45","17:47","17:49","17:49","17:50","17:51","17:52"],"a":"18:15"}}}},
+    haw:{stops:[
+        {name:"노원우주학교",loc:"노원우주학교 건너편",rv:"https://map.naver.com/v5/?c=127.06539564216472,37.64097527179477,17,0,0,0,dh&mode=roadview",lat:"37.64097527179477",lng:"127.06539564216472"},
+        {name:"롯데/경남/상아A(꽃집앞)",loc:"롯데/경남/상아 아파트 꽃집 앞",rv:"https://map.naver.com/v5/?c=127.0639779960008,37.639390316289955,17,0,0,0,dh&mode=roadview",lat:"37.639390316289955",lng:"127.0639779960008"},
+        {name:"하계현대우성아파트(건너편 정류장)",loc:"하계현대우성 아파트 건너편 정류장",rv:"https://map.naver.com/v5/?c=127.06524000000002,37.63652,17,0,0,0,dh&mode=roadview",lat:"37.63652",lng:"127.06524000000002"},
+        {name:"벽상상가",loc:"벽산 상가 버스정류장 앞",rv:"https://map.naver.com/v5/?c=127.0658352300882,37.63516592751091,17,0,0,0,dh&mode=roadview",lat:"37.63516592751091",lng:"127.0658352300882"},
+        {name:"학여울 청구아파트(후문)",loc:"학여울 청구아파트 후문 앞",rv:"https://map.naver.com/v5/?c=127.06352,37.63447,17,0,0,0,dh&mode=roadview",lat:"37.63447",lng:"127.06352"},
+        {name:"학여울 청구아파트(정문)",loc:"학여울 청구아파트 정문 앞",rv:"https://map.naver.com/v5/?c=127.0612,37.63734,17,0,0,0,dh&mode=roadview",lat:"37.63734",lng:"127.0612"},
+        {name:"연세유치원(앞)",loc:"연세유치원 앞",rv:"https://map.naver.com/v5/?c=127.06088,37.638369999999995,17,0,0,0,dh&mode=roadview",lat:"37.638369999999995",lng:"127.06088"},
+        {name:"서울아이티고등학교앞(CU)",loc:"중원초 정문 앞",rv:"https://map.naver.com/v5/?c=127.06305,37.64133,17,0,0,0,dh&mode=roadview",lat:"37.64133",lng:"127.06305"},
+        {name:"중계 센트럴아파트(테니스장)",loc:"중계 센트럴아파트 테니스장 앞",rv:"https://map.naver.com/v5/?c=127.0602,37.64497,17,0,0,0,dh&mode=roadview",lat:"37.64497",lng:"127.0602"},
+        {name:"미도아파트(정문건너편)",loc:"미도아파트 정문 앞",rv:"https://map.naver.com/v5/?c=127.06011,37.6461,17,0,0,0,dh&mode=roadview",lat:"37.6461",lng:"127.06011"},
+        {name:"노원중학교",loc:"노원중학교 건너편",rv:"https://map.naver.com/v5/?c=127.06060347828826,37.64862718353206,17,0,0,0,dh&mode=roadview",lat:"37.64862718353206",lng:"127.06060347828826"},
+        {name:"상계 주공A 우리은행",loc:"상계 주공A 우리은행 건너편",rv:"https://map.naver.com/v5/?c=127.06133,37.6512,17,0,0,0,dh&mode=roadview",lat:"37.6512",lng:"127.06133"},
+        {name:"상수초등학교(아라유치원)",loc:"상수초 앞",rv:"https://map.naver.com/v5/?c=127.06533,37.65231,17,0,0,0,dh&mode=roadview",lat:"37.65231",lng:"127.06533"}
+      ],times:{mwf:{"14:30":{"t":["15:55","15:57","15:59","16:00","16:01","16:02","16:05","16:10","16:13","16:14","16:16","16:20","16:25"],"d":"15:50"},"15:50":{"t":["17:35","17:37","17:39","17:40","17:41","17:42","17:45","17:50","17:53","17:54","17:56","18:00","18:05"],"d":"17:30"},"17:30":{"t":["19:15","19:17","19:19","19:20","19:21","19:22","19:25","19:30","19:33","19:34","19:36","19:40","19:45"],"d":"19:10"},"19:10":{"t":["21:05","21:07","21:09","21:10","21:11","21:12","21:15","21:20","21:23","21:24","21:26","21:30","21:35"],"d":"21:00"}},tt:{"15:40":{"t":["18:25","18:27","18:29","18:30","18:31","18:32","18:35","18:40","18:43","18:44","18:46","18:50","18:55"],"d":"18:20"},"18:20":{"t":["21:05","21:07","21:09","21:10","21:11","21:22","21:15","21:20","21:23","21:24","21:26","21:30","21:35"],"d":"21:00"}}}}
+  },
+  bus6:{
+    name:"6호차", driver:"김대현 기사님",
+    tel:{driver:"010-3116-3164", mwf:"010-4005-2559", tt:"010-7229-7102"},
+    dong:{stops:[
+        {name:"오현초등학교(정문옆)",rv:"https://naver.me/GSQ92HoY",loc:"오현초 정문 옆",kw:"오현초,서울오현초등학교,장월초,서울장월초등학교,장위동,성북구"},
+        {name:"코오롱하늘채A(주차장입구)",rv:"https://naver.me/FEgI23HL",loc:"코오롱하늘채A 주차장입구",kw:"코오롱하늘채,하늘채아파트,장월초,서울장월초등학교,장곡초,서울장곡초등학교,장위동"},
+        {name:"꿈의숲 아이파크A(703동 앞)",rv:"https://naver.me/FP8iR8bV",loc:"아이파크A 703동 앞",kw:"꿈의숲아이파크,아이파크,703동,장곡초,서울장곡초등학교,장위동"},
+        {name:"꿈의숲 래미안 103동 앞",rv:"https://naver.me/GYDMlDYt",loc:"래미안 103동 버스정류장",kw:"꿈의숲래미안,래미안장위,래미안,103동,장곡초,서울장곡초등학교,신창중,신창중학교,장위동"},
+        {name:"꿈의숲 SK아파트(정문)",rv:"https://naver.me/5K6vc6W0",loc:"꿈의숲 SK아파트 정문",kw:"꿈의숲SK,SK아파트,광운중,광운중학교,광운대,월계초,서울월계초등학교,월계동"},
+        {name:"롯데캐슬(정문 건너편)",rv:"https://naver.me/GmpGeGYS",loc:"롯데캐슬 정문 건너편 버스정류장",kw:"롯데캐슬,월계초,서울월계초등학교,광운중,광운중학교,녹천중,녹천중학교,염광중,염광중학교,월계동"},
+        {name:"월계센트럴아이파크(에스오일 주유소앞)",rv:"https://naver.me/FiPAGA3l",loc:"월계 센트럴 아이파크 에스오일 주우쇼 앞",kw:"월계센트럴,센트럴아이파크,에스오일,주유소,월계중,월계중학교,녹천중,녹천중학교,염광중,염광중학교,연지초,서울연지초등학교,월계동"},
+        {name:"월계 헬스케어",rv:"https://naver.me/xSBD0fEk",loc:"월계 헬스케어 앞",kw:"월계헬스케어,월계역,녹천중,녹천중학교,염광중,염광중학교,연지초,서울연지초등학교,월계중,월계중학교,월계동"}
+      ],times:{mwf:{"14:30":{"t":["14:00","14:03","14:05","14:06","14:14","14:17","14:19","14:20"],"a":"14:30"},"15:50":{"t":["15:05","15:08","15:10","15:11","15:19","15:20","15:22","15:23"],"a":"15:38"},"17:30":{"t":["16:45","16:47","16:50","16:51","16:55","16:57","17:01","17:02"],"a":"17:17"},"19:10":{"t":["18:23","18:25","18:28","18:29","18:34","18:37","18:40","18:42"],"a":"18:55"}},tt:{"15:40":{"t":["15:03","15:06","15:07","15:08","15:14","15:17","15:20","15:22"],"a":"15:35"},"18:20":{"t":["17:29","17:32","17:33","17:34","17:38","17:39","17:40","17:42"],"a":"18:05"}}}},
+    haw:{stops:[
+        {name:"월계 헬스케어",loc:"월계 헬스케어 건너편 버스정류장",rv:"https://map.naver.com/v5/?c=127.06155,37.63164,17,0,0,0,dh&mode=roadview",lat:"37.63164",lng:"127.06155"},
+        {name:"월계센트럴아이파크(에스오일 주유소앞)",loc:"월계 센트럴 아이파크 용궁 중화요리 앞",rv:"https://map.naver.com/v5/?c=127.05714,37.62885,17,0,0,0,dh&mode=roadview",lat:"37.62885",lng:"127.05714"},
+        {name:"롯데캐슬(정문 건너편)",loc:"롯데캐슬 정문",rv:"https://map.naver.com/v5/?c=127.05142,37.62636,17,0,0,0,dh&mode=roadview",lat:"37.62636",lng:"127.05142"},
+        {name:"오현초등학교(정문옆)",loc:"오현초 버스정류장",rv:"https://map.naver.com/v5/?c=127.04797810079548,37.62328602639149,17,0,0,0,dh&mode=roadview",lat:"37.62328602639149",lng:"127.04797810079548"},
+        {name:"코오롱하늘채A(주차장입구)",loc:"코오롱하늘채A 주차장입구",rv:"https://map.naver.com/v5/?c=127.04638,37.62003,17,0,0,0,dh&mode=roadview",lat:"37.62003",lng:"127.04638"},
+        {name:"꿈의숲 아이파크A(703동 앞)",loc:"아이파크A 703동 앞 메가커피",rv:"https://map.naver.com/v5/?c=127.05084,37.61895,17,0,0,0,dh&mode=roadview",lat:"37.61895",lng:"127.05084"},
+        {name:"꿈의숲 래미안 103동 앞",loc:"래미안 103동 버스정류장",rv:"https://map.naver.com/v5/?c=127.05258,37.61884,17,0,0,0,dh&mode=roadview",lat:"37.61884",lng:"127.05258"},
+        {name:"꿈의숲 SK아파트(정문)",loc:"꿈의숲 SK아파트 정문",rv:"https://map.naver.com/v5/?c=127.05373,37.62092,17,0,0,0,dh&mode=roadview",lat:"37.62092",lng:"127.05373"}
+      ],times:{mwf:{"14:30":{"t":["16:00","16:01","16:03","16:06","16:09","16:11","16:15","16:20"],"d":"15:50"},"15:50":{"t":["17:40","17:41","17:43","17:46","17:49","17:51","17:55","18:00"],"d":"17:30"},"17:30":{"t":["19:20","19:21","19:23","19:26","19:29","19:31","19:35","19:40"],"d":"19:10"},"19:10":{"t":["21:10","21:11","21:13","21:16","21:19","21:21","21:25","21:30"],"d":"21:00"}},tt:{"15:40":{"t":["18:30","18:31","18:33","18:36","18:39","18:41","18:45","18:50"],"d":"18:20"},"18:20":{"t":["21:10","21:11","21:13","21:16","21:19","21:21","21:25","21:30"],"d":"21:00"}}}}
+  },
+  bus8:{
+    name:"8호차", driver:"한상준 기사님",
+    tel:{driver:"010-5288-1682", mwf:"010-5139-4021", tt:"010-4235-3798"},
+    dong:{stops:[
+        {name:"선곡초등학교(건너편 GS25)",rv:"https://naver.me/FFqjhume",loc:"선곡초 건너편 GS25",kw:"선곡초,서울선곡초등학교,장월초,서울장월초등학교,석관중,석관중학교,GS25,장위동,성북구"},
+        {name:"장위3동 주민센터옆 키움센터",rv:"https://naver.me/GxrAIcs0",loc:"장위3동 주민센터 건너편",kw:"장위3동,주민센터,키움센터,장위동"},
+        {name:"장위자이레디언트 3단지 303동 앞",rv:"https://naver.me/5PW18Hx8",loc:"장위자이래디언트 303동 앞",kw:"장위자이,자이레디언트,3단지,303동,석계초,서울석계초등학교,석관중,석관중학교,장위동"},
+        {name:"석계 두산아파트",rv:"https://naver.me/xbKHO0Kc",loc:"두산아파트 정문 앞",kw:"석계두산,두산아파트,석계역,석계초,서울석계초등학교,석관중,석관중학교,석계동"},
+        {name:"한진그랑빌 114동",rv:"https://naver.me/Fso0ExYp",loc:"한진그랑빌 114동 정자 맞은편",kw:"한진그랑빌,114동,석계초,서울석계초등학교,한천초,서울한천초등학교,석계동"},
+        {name:"한진그랑빌A(상가GS25)",rv:"https://naver.me/xdM8vgc9",loc:"한진그랑빌 GS25 옆 국민은행",kw:"한진그랑빌,GS25,국민은행,한천초,서울한천초등학교,한천중,한천중학교,석계동,월계동"},
+        {name:"미성아파트15동 BUS정류장",rv:"https://naver.me/x1u42xIw",loc:"한내도서관 앞 버스정류장",kw:"미성아파트,15동,한내도서관,한천초,서울한천초등학교,한천중,한천중학교,월계중,월계미성,월계동"}
+      ],times:{mwf:{"14:30":{"t":["13:50","13:55","14:00","14:05","14:10","14:10","14:13"],"a":"14:30"},"15:50":{"t":["15:05","15:10","15:15","15:20","15:25","15:25","15:28"],"a":"15:40"},"17:30":{"t":["16:45","16:50","16:55","17:00","17:05","17:05","17:08"],"a":"17:20"},"19:10":{"t":["18:15","18:20","18:25","18:30","18:35","18:35","18:38"],"a":"19:00"}},tt:{"15:40":{"t":["14:55","15:00","15:05","15:10","15:15","15:15","15:18"],"a":"15:30"},"18:20":{"t":["17:25","17:30","17:35","17:40","17:45","17:45","17:48"],"a":"18:10"}}}},
+    haw:{stops:[
+        {name:"미성아파트15동 BUS정류장",loc:"미성아파트 15동 앞 버스정류장",rv:"https://map.naver.com/v5/?c=127.06854,37.62325,17,0,0,0,dh&mode=roadview",lat:"37.62325",lng:"127.06854"},
+        {name:"한진그랑빌A(상가GS25)",loc:"한진그랑빌 GS25 맞은편",rv:"https://map.naver.com/v5/?c=127.06887,37.61862,17,0,0,0,dh&mode=roadview",lat:"37.61862",lng:"127.06887"},
+        {name:"한진그랑빌 114동",loc:"한진그랑빌 114동 정자 앞",rv:"https://map.naver.com/v5/?c=127.06888,37.61689,17,0,0,0,dh&mode=roadview",lat:"37.61689",lng:"127.06888"},
+        {name:"석계 두산아파트",loc:"두산아파트정문",rv:"https://map.naver.com/v5/?c=127.06761,37.61359,17,0,0,0,dh&mode=roadview",lat:"37.61359",lng:"127.06761"},
+        {name:"장위자이레디언트 3단지 303동",loc:"장위자이래디언트 303동 앞",rv:"https://map.naver.com/v5/?c=127.05723961237942,37.61375620290373,17,0,0,0,dh&mode=roadview",lat:"37.61375620290373",lng:"127.05723961237942"},
+        {name:"장위3동 주민센터옆 키움센터(101동쪽)",loc:"장위3동주민센터 앞",rv:"https://map.naver.com/v5/?c=127.05505484146349,37.61535537072426,17,0,0,0,dh&mode=roadview",lat:"37.61535537072426",lng:"127.05505484146349"},
+        {name:"선곡초등학교",loc:"선곡초 앞",rv:"https://map.naver.com/v5/?c=127.057390465357,37.618457035812476,17,0,0,0,dh&mode=roadview",lat:"37.618457035812476",lng:"127.057390465357"}
+      ],times:{mwf:{"14:30":{"t":["15:54","15:57","15:59","16:04","16:09","16:11","16:15"],"d":"15:50"},"15:50":{"t":["17:34","17:37","17:39","17:44","17:49","17:51","17:55"],"d":"17:30"},"17:30":{"t":["19:14","19:17","19:19","19:24","19:29","19:31","19:35"],"d":"19:10"},"19:10":{"t":["21:04","21:07","21:09","21:14","21:19","21:21","21:25"],"d":"21:00"}},tt:{"15:40":{"t":["18:24","18:27","18:29","18:34","18:39","18:41","18:45"],"d":"18:20"},"18:20":{"t":["21:04","21:07","21:09","21:14","21:19","21:21","21:25"],"d":"21:00"}}}}
+  },
+  bus7:{
+    name:"7호차", driver:"김주영 기사님",
+    tel:{driver:"010-8464-2737", mwf:"010-9354-9951", tt:"010-7714-7912"},
+    dong:{stops:[
+        {name:"화랑대 이편한세상",rv:"https://naver.me/F3E9vA7y",loc:"화랑대이편한세상 입구",kw:"화랑대이편한세상,이편한세상,화랑대,원묵초,서울원묵초등학교,원묵중,원묵중학교,태랑초,서울태랑초등학교,태릉초,태릉초등학교,화랑초,화랑초등학교,공릉동"},
+        {name:"태릉 브라운스톤(분수공원)",rv:"https://naver.me/xm01Vwy1",loc:"태릉브라운스톤 분수공원 앞",kw:"태릉브라운스톤,브라운스톤,분수공원,원묵초,서울원묵초등학교,원묵중,원묵중학교,태랑초,서울태랑초등학교,태릉초,태릉초등학교,화랑초,화랑초등학교,공릉동"},
+        {name:"다리앞 (할매복집 앞)",rv:"https://naver.me/G5ktoFY8",loc:"할매복집 건너편 버스정류장",kw:"다리앞,할매복집,원묵초,서울원묵초등학교,공릉중,공릉중학교,공릉동"},
+        {name:"공릉 두산아파트",rv:"https://naver.me/GqfeGrB9",loc:"공릉 두산아파트 입구",kw:"공릉두산,두산아파트,두산힐스빌,공릉중,공릉중학교,공연초,서울공연초등학교,공릉동"},
+        {name:"화랑약국 앞",rv:"https://naver.me/G1pX5PiB",loc:"화랑약국 앞(우리집 공인중개사)",kw:"화랑약국,공릉중,공릉중학교,공연초,서울공연초등학교,공릉동"},
+        {name:"원자력병원입구(해동부동산)",rv:"https://naver.me/5YorZ4WY",loc:"공릉 삼익 2차아파트 후문 입구",kw:"원자력병원,삼익포레스트,공연초,서울공연초등학교,경희여중,경희여자중학교,공릉동"},
+        {name:"공릉 동부아파트(입구)",rv:"https://naver.me/FqIGNXCX",loc:"공릉 동부아파트 입구",kw:"공릉동부,동부아파트,경희여중,경희여자중학교,공연초,공릉동"},
+        {name:"하계 미성아파트",rv:"https://naver.me/xG0fSvOX",loc:"청솔아파트 입구 간이 구두수선 앞",kw:"하계미성,미성아파트,연촌초,서울연촌초등학교,한별중,한별중학교,하계역,청솔아파트,하계동"},
+        {name:"하계 어울림센터",rv:"https://naver.me/xqb8H2O5",loc:"하계 어울림센터 앞",kw:"하계어울림센터,연촌초,서울연촌초등학교,한별중,하계동"}
+      ],times:{mwf:{"14:30":{"t":["14:00","14:01","14:03","14:06","14:08","14:09","14:12","14:17","14:20"],"a":"14:25"},"15:50":{"t":["15:18","15:20","15:22","15:25","15:27","15:28","15:31","15:36","15:38"],"a":"15:43"},"17:30":{"t":["16:59","17:00","17:02","17:05","17:07","17:08","17:11","17:16","17:19"],"a":"17:24"},"19:10":{"t":["18:33","18:33","18:37","18:43","18:45","18:47","18:49","18:53","18:55"],"a":"19:05"}},tt:{"15:40":{"t":["15:00","15:00","15:05","15:11","15:13","15:15","15:17","15:21","15:23"],"a":"15:30"},"18:20":{"t":["17:30","17:30","17:34","17:40","17:42","17:45","17:47","17:51","17:53"],"a":"18:05"}}}},
+    haw:{stops:[
+        {name:"하계 어울림센터",loc:"어울림 센터 건너편 횡단보도 앞",rv:"https://map.naver.com/v5/?c=127.07209551965187,37.63598216478946,17,0,0,0,dh&mode=roadview",lat:"37.63598216478946",lng:"127.07209551965187"},
+        {name:"하계 미성아파트",loc:"SK주유소 건너편 청솔아파트",rv:"https://map.naver.com/v5/?c=127.07049828772017,37.63323061970987,17,0,0,0,dh&mode=roadview",lat:"37.63323061970987",lng:"127.07049828772017"},
+        {name:"공릉 동부아파트(입구)",loc:"공릉 동부아파트 건너편 gs앞 횡단보도",rv:"https://map.naver.com/v5/?c=127.07789064613242,37.62790677548402,17,0,0,0,dh&mode=roadview",lat:"37.62790677548402",lng:"127.07789064613242"},
+        {name:"원자력병원입구(해동부동산)",loc:"공릉 삼익 2차아파트 건너편 우리농수산물",rv:"https://map.naver.com/v5/?c=127.07926,37.62663,17,0,0,0,dh&mode=roadview",lat:"37.62663",lng:"127.07926"},
+        {name:"화랑약국 앞",loc:"화랑약국 건너편 기업은행 횡단보도 앞",rv:"https://map.naver.com/v5/?c=127.0794462555144,37.62333548338659,17,0,0,0,dh&mode=roadview",lat:"37.62333548338659",lng:"127.0794462555144"},
+        {name:"공릉 두산아파트",loc:"공릉 두산아파트 건너편 공중전화",rv:"https://map.naver.com/v5/?c=127.07893151637857,37.621288335430336,17,0,0,0,dh&mode=roadview",lat:"37.621288335430336",lng:"127.07893151637857"},
+        {name:"다리앞 (할매복집 앞)",loc:"할매복집 앞 버스정류장",rv:"https://map.naver.com/v5/?c=127.07923669148065,37.61799614746085,17,0,0,0,dh&mode=roadview",lat:"37.61799614746085",lng:"127.07923669148065"},
+        {name:"태릉 브라운스톤(분수공원)",loc:"태릉브라운스톤 분수공원 앞",rv:"https://map.naver.com/v5/?c=127.08330615283565,37.61827039852773,17,0,0,0,dh&mode=roadview",lat:"37.61827039852773",lng:"127.08330615283565"},
+        {name:"화랑대 이편한세상",loc:"화랑대이편한세상 입구",rv:"https://map.naver.com/v5/?c=127.0837685290918,37.6164658428915,17,0,0,0,dh&mode=roadview",lat:"37.6164658428915",lng:"127.0837685290918"}
+      ],times:{mwf:{"14:30":{"t":["15:55","15:58","16:03","16:06","16:07","16:09","16:12","16:14","16:15"],"d":"15:50"},"15:50":{"t":["17:35","17:37","17:42","17:45","17:46","17:48","17:51","17:53","17:55"],"d":"17:30"},"17:30":{"t":["19:15","19:18","19:23","19:26","19:27","19:29","19:32","19:34","19:35"],"d":"19:10"},"19:10":{"t":["21:10","21:12","21:16","21:18","21:20","21:22","21:28","21:32","21:32"],"d":"21:00"}},tt:{"15:40":{"t":["18:27","18:29","18:33","18:35","18:37","18:39","18:45","18:50","18:50"],"d":"18:20"},"18:20":{"t":["21:12","21:14","21:18","21:20","21:23","21:25","21:31","21:35","21:35"],"d":"21:00"}}}}
+  },
+  bus9:{
+    name:"9호차", driver:"김홍영 기사님",
+    tel:{driver:"010-9164-3231", mwf:"010-8363-0354", tt:"010-2777-5289"},
+    dong:{stops:[
+        {name:"신내 6단지",rv:"https://naver.me/GFsAHU0c",loc:"신내 6단지 상가 주차장 앞 횡단보도",kw:"신내6단지,신내동,봉화산역,금성초,금성초등학교,중랑구"},
+        {name:"신내 5단지(금성초 건너편)",rv:"https://naver.me/IgMOW5Gs",loc:"신내 5단지 두산,대림아파트 버스정류장",kw:"신내5단지,금성초,금성초등학교,두산아파트,대림아파트,신내동"},
+        {name:"신내 4단지( 406동 횡단보도 건너편)",rv:"https://naver.me/FQuWQoQl",loc:"406동 횡단보도 건너편",kw:"신내4단지,406동,원묵초,서울원묵초등학교,신내동"},
+        {name:"화랑타운(예수사랑교회)",rv:"https://naver.me/xaTVL1p6",loc:"청소년경찰학교 횡단보도 건너편",kw:"화랑타운,예수사랑교회,화랑대역,태릉초,태릉초등학교,서울태릉초등학교,태랑중,태랑중학교,공릉중,공릉중학교,공릉동"},
+        {name:"비선/공릉APT(601동앞)",rv:"https://naver.me/xZKXv7GX",loc:"아파트 근처 구두방 건너편",kw:"비선아파트,공릉아파트,601동,공릉중,공릉중학교,공릉동"},
+        {name:"우방/효성A(입구)",rv:"https://naver.me/xrzdL0lp",loc:"공릉해밀턴 301동 앞",kw:"우방아파트,효성아파트,공릉해링턴,해링턴플레이스,공릉중,공릉중학교,경희여중,경희여자중학교,공릉동"}
+      ],times:{mwf:{"14:30":{"t":["14:08","14:10","14:12","14:17","14:18","14:20"],"a":"14:25"},"15:50":{"t":["15:28","15:30","15:32","15:37","15:38","15:40"],"a":"15:45"},"17:30":{"t":["17:08","17:10","17:12","17:17","17:18","17:20"],"a":"17:25"},"19:10":{"t":["18:43","18:45","18:47","18:52","18:53","18:55"],"a":"19:05"}},tt:{"15:40":{"t":["15:13","15:15","15:17","15:22","15:23","15:25"],"a":"15:35"},"18:20":{"t":["17:43","17:45","17:47","17:52","17:53","17:55"],"a":"18:10"}}}},
+    haw:{stops:[
+        {name:"우방/효성A(입구)",loc:"마실공원 다음 버스정류장 아래 횡단보도",rv:"https://map.naver.com/v5/?c=127.08569,37.62686,17,0,0,0,dh&mode=roadview",lat:"37.62686",lng:"127.08569"},
+        {name:"비선/공릉APT(601동앞)",loc:"아파트 근처 구두방 앞",rv:"https://map.naver.com/v5/?c=127.08641394533466,37.6243768575376,17,0,0,0,dh&mode=roadview",lat:"37.6243768575376",lng:"127.08641394533466"},
+        {name:"화랑타운(예수사랑교회)",loc:"청소년경찰학교 옆 횡단보도",rv:"https://map.naver.com/v5/?c=127.0869611798179,37.622520422349,17,0,0,0,dh&mode=roadview",lat:"37.622520422349",lng:"127.0869611798179"},
+        {name:"신내 4단지( 406동 횡단보도 건너편)",loc:"신내 4단지 버스정류장",rv:"https://map.naver.com/v5/?c=127.0862520710113,37.61663073657026,17,0,0,0,dh&mode=roadview",lat:"37.61663073657026",lng:"127.0862520710113"},
+        {name:"신내 5단지(금성초 건너편)",loc:"금성초 앞",rv:"https://map.naver.com/v5/?c=127.08922,37.61561,17,0,0,0,dh&mode=roadview",lat:"37.61561",lng:"127.08922"},
+        {name:"신내 6단지",loc:"신내 6단지 앞 버스정류장",rv:"https://map.naver.com/v5/?c=127.09190071779034,37.61622891176712,17,0,0,0,dh&mode=roadview",lat:"37.61622891176712",lng:"127.09190071779034"}
+      ],times:{mwf:{"14:30":{"t":["15:55","15:57","15:58","16:03","16:05","16:07"],"d":"15:50"},"15:50":{"t":["17:35","17:37","17:38","17:43","17:45","17:47"],"d":"17:30"},"17:30":{"t":["19:15","19:17","19:18","19:23","19:25","19:27"],"d":"19:10"},"19:10":{"t":["21:10","21:12","21:13","21:18","21:20","21:22"],"d":"21:00"}},tt:{"15:40":{"t":["18:25","18:27","18:28","18:33","18:35","18:37"],"d":"18:20"},"18:20":{"t":["21:10","21:12","21:14","21:19","21:21","21:23"],"d":"21:00"}}}}
+  }
+};
+
+const timeLabels={"14:30":"1코드 (14:30)","15:50":"2코드 (15:50)","17:30":"3코드 (17:30)","19:10":"4코드 (19:10)","15:40":"5코드 (15:40)","18:20":"6코드 (18:20)"};
+let sel={day:null,time:null,busKey:null,stopIdx:null};
+let currentTab='dong';
+let allStopBtns=[];
+let stopBtnMap={};
+
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&tab==='dong')||(i===1&&tab==='haw')));
+  resetAll();
+}
+
+function searchKeyword(q){
+  const res=document.getElementById("kwResults");
+  const query=q.trim().toLowerCase();
+  if(!query){res.classList.remove("show");res.innerHTML="";return;}
+  const matches=[];
+  ["bus1","bus2","bus3","bus5","bus6","bus7","bus8","bus9"].forEach(key=>{
+    const bus=buses[key];
+    const stops=bus[currentTab].stops;
+    stops.forEach((s,idx)=>{
+      const dongStop=bus.dong.stops.find(ds=>ds.name===s.name)||{};
+      const kwList=(s.name+","+(dongStop.kw||s.kw||"")).toLowerCase().split(",").map(k=>k.trim()).filter(k=>k);
+      const kwMatch=kwList.some(k=>k===query||k.startsWith(query)||query.startsWith(k));
+      if(kwMatch) matches.push({busKey:key,stopIdx:idx,bus:bus,stop:s});
+    });
+  });
+  if(matches.length===0){
+    res.innerHTML=`<div class="kw-empty">검색 결과가 없어요 😢</div>`;
+  } else {
+    res.innerHTML=matches.map(m=>`
+      <div class="kw-item" onclick="selectFromSearch('${m.busKey}',${m.stopIdx})">
+        <div>
+          <div class="kw-bus">${m.bus.name} · ${m.bus.driver}</div>
+          <div class="kw-name">${m.stop.name}</div>
+          <div class="kw-loc">📍 ${m.stop.loc||''}</div>
+        </div>
+        <button class="kw-go">선택 →</button>
+      </div>`).join("");
+  }
+  res.classList.add("show");
+}
+
+function selectFromSearch(busKey,stopIdx){
+  document.getElementById("kwSearch").value="";
+  document.getElementById("kwResults").classList.remove("show");
+  document.getElementById("kwResults").innerHTML="";
+
+  sel.busKey=busKey;sel.stopIdx=stopIdx;
+
+  // 요일/코드를 아직 안 골랐으면 기본값(월·수·금 1코드)으로 자동 설정해서 바로 결과를 보여줌
+  // (사용자가 필요하면 아래 Step 01/02에서 바로 바꿀 수 있음)
+  if(!sel.day){
+    sel.day="mwf";
+    const dayBtn=document.querySelector('[data-day="mwf"]');
+    document.querySelectorAll("[data-day]").forEach(b=>b.classList.toggle("selected",b===dayBtn));
+  }
+  if(!sel.time){
+    const times=sel.day==="mwf"?["14:30","15:50","17:30","19:10"]:["15:40","18:20"];
+    sel.time=times[0];
+  }
+
+  buildTimeSec();
+  document.querySelectorAll("#timeChoices .time-btn").forEach(b=>b.classList.toggle("selected",b.dataset.time===sel.time));
+  buildStopSec();
+  openAndHighlightStop(busKey,stopIdx);
+
+  setProgress(4);
+  showResult();
+}
+
+function openAndHighlightStop(busKey,stopIdx){
+  renderBusPanel(busKey);
+  setTimeout(()=>{
+    const tab=document.querySelector(`.bus-tab[data-key="${busKey}"]`);
+    if(tab) tab.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
+  },50);
+}
+
+function setProgress(step){
+  for(let i=1;i<=4;i++){
+    const el=document.getElementById("pd"+i);
+    el.classList.remove("active","done");
+    if(i<step) el.classList.add("done");
+    else if(i===step) el.classList.add("active");
+  }
+  if(step===4) document.getElementById("pd4num").textContent="✓";
+}
+
+document.querySelectorAll("[data-day]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    // 검색으로 이미 골라둔 정류장(sel.busKey/stopIdx)은 요일을 바꿔도 유지한다
+    sel.day=btn.dataset.day;sel.time=null;
+    document.querySelectorAll("[data-day]").forEach(b=>b.classList.toggle("selected",b===btn));
+    buildTimeSec();setProgress(2);
+    document.getElementById("sec3").classList.add("hidden");
+    document.getElementById("resultArea").classList.add("hidden");
+  });
+});
+
+function buildTimeSec(){
+  const times=sel.day==="mwf"?["14:30","15:50","17:30","19:10"]:["15:40","18:20"];
+  const c=document.getElementById("timeChoices");c.innerHTML="";
+  times.forEach(t=>{
+    const parts=timeLabels[t].split(" (");
+    const b=document.createElement("button");b.className="time-btn";b.dataset.time=t;
+    b.innerHTML=`<div class="time-code">${parts[0]}</div><div class="time-val">${parts[1].replace(")","")}</div>`;
+    b.addEventListener("click",()=>{
+      // 검색으로 이미 골라둔 정류장이 있으면 그대로 유지하고, 코드 선택과 동시에 결과를 바로 보여준다
+      const keepStop=sel.busKey!==null&&sel.stopIdx!==null;
+      sel.time=t;
+      document.querySelectorAll("#timeChoices .time-btn").forEach(x=>x.classList.toggle("selected",x===b));
+      buildStopSec();
+      if(keepStop){
+        openAndHighlightStop(sel.busKey,sel.stopIdx);
+        showResult();setProgress(4);
+      } else {
+        setProgress(3);
+        document.getElementById("resultArea").classList.add("hidden");
+      }
+    });
+    c.appendChild(b);
+  });
+  document.getElementById("sec2").classList.remove("hidden");
+}
+
+let busAvailableKeys=[];
+function buildStopSec(){
+  const tabsEl=document.getElementById("busTabs");tabsEl.innerHTML="";
+  document.getElementById("busPanel").innerHTML="";
+  allStopBtns=[];stopBtnMap={};
+  busAvailableKeys=["bus1","bus2","bus3","bus5","bus6","bus7","bus8","bus9"].filter(key=>{
+    const tdata=buses[key][currentTab].times;
+    return tdata[sel.day]&&tdata[sel.day][sel.time];
+  });
+  busAvailableKeys.forEach(key=>{
+    const bus=buses[key];
+    const tab=document.createElement("button");
+    tab.className="bus-tab";tab.dataset.key=key;tab.textContent=bus.name;
+    tab.addEventListener("click",()=>renderBusPanel(key));
+    tabsEl.appendChild(tab);
+  });
+  if(busAvailableKeys.length){
+    const startKey=busAvailableKeys.includes(sel.busKey)?sel.busKey:busAvailableKeys[0];
+    renderBusPanel(startKey);
+  }
+  document.getElementById("sec3").classList.remove("hidden");
+}
+
+function renderBusPanel(key){
+  document.querySelectorAll(".bus-tab").forEach(t=>t.classList.toggle("active",t.dataset.key===key));
+  const panelEl=document.getElementById("busPanel");panelEl.innerHTML="";
+  allStopBtns=[];stopBtnMap={};
+  const bus=buses[key];
+  const stops=bus[currentTab].stops;
+  stops.forEach((s,idx)=>{
+    const b=document.createElement("button");b.className="stop-btn";
+    b.textContent=s.name;
+    if(key===sel.busKey&&idx===sel.stopIdx) b.classList.add("selected");
+    b.addEventListener("click",()=>{
+      sel.busKey=key;sel.stopIdx=idx;
+      allStopBtns.forEach(x=>x.classList.toggle("selected",x===b));
+      showResult();setProgress(4);
+    });
+    panelEl.appendChild(b);allStopBtns.push(b);stopBtnMap[key+"_"+idx]=b;
+  });
+}
+
+const toMin=t=>{const[h,m]=t.split(":").map(Number);return h*60+m;};
+
+function showResult(){
+  const bus=buses[sel.busKey];
+  const isDong=currentTab==='dong';
+  const tdata=bus[currentTab].times[sel.day]?.[sel.time];
+  if(!tdata){alert("해당 코드에 정보가 없어요.");return;}
+  const stops=bus[currentTab].stops;
+  const s=stops[sel.stopIdx];
+
+  document.getElementById("rTag").textContent=isDong?'🏫 등원':'🏠 하원';
+  document.getElementById("rName").textContent=s.name;
+  document.getElementById("rBus").textContent=`${bus.name} · ${bus.driver}`;
+
+  const rvBtn=document.getElementById("rvBtn");
+
+  if(isDong){
+    document.getElementById("timeBlock").classList.remove("hidden");
+    document.getElementById("departBlock").classList.add("hidden");
+    const myTime=tdata.t[sel.stopIdx];
+    document.getElementById("rTime").textContent=myTime;
+    document.getElementById("rArrive").textContent=tdata.a+" 도착";
+    const diff=toMin(tdata.a)-toMin(myTime);
+    document.getElementById("rDuration").textContent=`약 ${diff}분`;
+
+    if(s.lat&&s.lng){
+      rvBtn.removeAttribute("href");rvBtn.className="rv-btn";rvBtn.onclick=()=>openRV(s.lat,s.lng,s.name);
+      rvBtn.innerHTML=`<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:white"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>로드뷰로 위치 확인`;
+    } else if(s.rv){
+      rvBtn.href=s.rv;rvBtn.className="rv-btn";rvBtn.onclick=null;rvBtn.target="_blank";
+      rvBtn.innerHTML=`<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:white"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>로드뷰로 위치 확인`;
+    } else {
+      rvBtn.removeAttribute("href");rvBtn.className="rv-btn off";rvBtn.onclick=null;
+      rvBtn.innerHTML=`<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>로드뷰 준비 중`;
+    }
+    document.getElementById("locBlock").classList.remove("hidden");
+  } else {
+    document.getElementById("timeBlock").classList.add("hidden");
+    document.getElementById("departBlock").classList.remove("hidden");
+    document.getElementById("rDepart").textContent=tdata.d||'—';
+    const myTime=tdata.t[sel.stopIdx];
+    document.getElementById("rTime2").textContent=myTime;
+    try{
+      if(tdata.d&&tdata.d!==""&&myTime&&myTime!==""){
+        const diff=toMin(myTime)-toMin(tdata.d);
+        document.getElementById("rDuration2").textContent=(diff>0&&diff<180)?`약 ${diff}분`:"—";
+      } else { document.getElementById("rDuration2").textContent="—"; }
+    } catch(e){ document.getElementById("rDuration2").textContent="—"; }
+
+    if(s.lat&&s.lng){
+      rvBtn.removeAttribute("href");rvBtn.className="rv-btn";rvBtn.onclick=()=>openRV(s.lat,s.lng,s.name);
+      rvBtn.innerHTML=`<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:white"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>로드뷰로 위치 확인`;
+    } else {
+      rvBtn.removeAttribute("href");rvBtn.className="rv-btn off";rvBtn.onclick=null;
+      rvBtn.innerHTML=`<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>로드뷰 준비 중`;
+    }
+    document.getElementById("locBlock").classList.remove("hidden");
+  }
+
+  const cb=document.getElementById("contactBody");cb.innerHTML="";
+  [{role:"기사님",tel:bus.tel.driver},{role:"차량 선생님 (월·수·금)",tel:bus.tel.mwf},{role:"차량 선생님 (화·목)",tel:bus.tel.tt}].forEach(r=>{
+    cb.innerHTML+=`<div class="contact-row"><span class="contact-role">${r.role}</span><span class="contact-tel">${r.tel}</span><a href="tel:${r.tel}" class="call-btn">📞 전화</a></div>`;
+  });
+
+  document.getElementById("tlTitle").innerHTML=isDong?'🚌 전체 등원 시간표 <span class="tl-hint">· 파란색이 내 정류장</span>':'🏠 전체 하원 시간표 <span class="tl-hint">· 파란색이 내 정류장</span>';
+  const tl=document.getElementById("tlBody");tl.innerHTML="";
+
+  if(isDong){
+    stops.forEach((st,i)=>{
+      const mine=i===sel.stopIdx,last=i===stops.length-1;
+      const row=document.createElement("div");row.className="tl-row"+(mine?" mine-row":"");
+      row.innerHTML=`<div style="padding-top:3px"><div class="tl-dot${mine?" mine":last?" last":""}"></div></div><div class="tl-name">${mine?`<strong>🚏 ${st.name}</strong>`:st.name}</div><div class="tl-time">${tdata.t[i]}</div>`;
+      tl.appendChild(row);
+    });
+    const ar=document.createElement("div");ar.className="tl-row";
+    ar.innerHTML=`<div style="padding-top:3px"><div class="tl-dot last"></div></div><div class="tl-name" style="color:var(--green);font-weight:700;">🏫 학원 도착</div><div class="tl-time" style="color:var(--green);">${tdata.a}</div>`;
+    tl.appendChild(ar);
+  } else {
+    const dep=document.createElement("div");dep.className="tl-row";
+    dep.innerHTML=`<div style="padding-top:3px"><div class="tl-dot last"></div></div><div class="tl-name" style="color:var(--blue-dark);font-weight:700;">🏫 학원 출발</div><div class="tl-time" style="color:var(--blue-dark);">${tdata.d||'—'}</div>`;
+    tl.appendChild(dep);
+    stops.forEach((st,i)=>{
+      const mine=i===sel.stopIdx,last=i===stops.length-1;
+      const row=document.createElement("div");row.className="tl-row"+(mine?" mine-row":"");
+      row.innerHTML=`<div style="padding-top:3px"><div class="tl-dot${mine?" mine":last?" last":""}"></div></div><div class="tl-name">${mine?`<strong>🏠 ${st.name}</strong>`:st.name}</div><div class="tl-time">${tdata.t[i]}</div>`;
+      tl.appendChild(row);
+    });
+  }
+
+  document.getElementById("resultArea").classList.remove("hidden");
+  setTimeout(()=>document.getElementById("resultArea").scrollIntoView({behavior:"smooth",block:"start"}),100);
+}
+
+function resetAll(){
+  sel={day:null,time:null,busKey:null,stopIdx:null};
+  setProgress(1);
+  document.querySelectorAll(".day-btn,.time-btn").forEach(b=>b.classList.remove("selected"));
+  document.getElementById("sec2").classList.add("hidden");
+  document.getElementById("sec3").classList.add("hidden");
+  document.getElementById("resultArea").classList.add("hidden");
+  document.getElementById("pd4num").textContent="4";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+// 카카오 로드뷰 + 지도
+let rvInstance=null;
+let mapInstance=null;
+let curStop={lat:null,lng:null,title:null};
+function switchRVTab(tab){
+  document.getElementById('tabRV').classList.toggle('active',tab==='rv');
+  document.getElementById('tabMap').classList.toggle('active',tab==='map');
+  document.getElementById('rvContainer').style.display=tab==='rv'?'block':'none';
+  document.getElementById('mapContainer').style.display=tab==='map'?'block':'none';
+  if(tab==='map')openMap(curStop.lat,curStop.lng,curStop.title);
+}
+function openMap(lat,lng,title){
+  const container=document.getElementById('mapContainer');
+  container.style.width='100%';container.style.height='300px';container.innerHTML='';
+  let attempts=0;
+  function waitForKakaoMap(){
+    if(typeof kakao!=='undefined'&&kakao.maps&&kakao.maps.Map){
+      try{
+        const position=new kakao.maps.LatLng(lat,lng);
+        // 레벨을 낮게(확대) 잡아서 도로 건너편인지 이쪽인지 눈으로 구분되게 함
+        mapInstance=new kakao.maps.Map(container,{center:position,level:2});
+        new kakao.maps.Marker({position:position,map:mapInstance});
+      }catch(e){container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:300px;color:#666;font-size:13px;">오류: '+e.message+'</div>';}
+    } else if(attempts<40){attempts++;setTimeout(waitForKakaoMap,200);}
+    else{container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:300px;color:#666;font-size:13px;">카카오맵 로드 실패. 새로고침해주세요.</div>';}
+  }
+  waitForKakaoMap();
+}
+function openRV(lat,lng,title){
+  curStop={lat,lng,title};
+  document.getElementById('rvModal').classList.add('show');
+  document.getElementById('rvModalTitle').textContent=title||'로드뷰';
+  document.body.style.overflow='hidden';
+  switchRVTab('rv');
+  const container=document.getElementById('rvContainer');
+  container.style.width='100%';container.style.height='300px';container.innerHTML='';
+  let attempts=0;
+  function waitForKakao(){
+    // kakao.maps는 먼저 생기고, Roadview 관련 클래스는 조금 늦게 준비될 수 있어서
+    // 두 클래스가 실제로 존재하는지까지 확인 (이게 없으면 가끔 로드뷰만 실패하는 원인이 됨)
+    if(typeof kakao!=='undefined'&&kakao.maps&&kakao.maps.Roadview&&kakao.maps.RoadviewClient){
+      try{
+        const position=new kakao.maps.LatLng(lat,lng);
+        rvInstance=new kakao.maps.Roadview(container);
+        const client=new kakao.maps.RoadviewClient();
+        client.getNearestPanoId(position,50,function(panoId){
+          if(panoId){rvInstance.setPanoId(panoId,position);}
+          else{container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:300px;color:#666;font-size:13px;">이 위치의 로드뷰를 찾을 수 없어요 😢</div>';}
+        });
+      }catch(e){container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:300px;color:#666;font-size:13px;">오류: '+e.message+'</div>';}
+    } else if(attempts<40){attempts++;setTimeout(waitForKakao,200);}
+    else{container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:300px;color:#666;font-size:13px;">카카오맵 로드 실패. 새로고침해주세요.</div>';}
+  }
+  waitForKakao();
+}
+function closeRV(e){if(e.target===document.getElementById('rvModal'))closeRVBtn();}
+function closeRVBtn(){document.getElementById('rvModal').classList.remove('show');document.body.style.overflow='';}
+</script>
+</body>
+</html>
