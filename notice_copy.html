@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>셔틀 공지 복사용</title>
+<style>
+body{font-family:'Noto Sans KR',sans-serif;background:#f0f3f8;margin:0;padding:24px}
+.guide{max-width:780px;margin:0 auto 16px;background:#fff;border-radius:10px;padding:16px 20px;font-size:14px;color:#333;line-height:1.7}
+.guide b{color:#1c2e5e}
+button{margin-top:8px;padding:10px 20px;border:0;border-radius:8px;background:#1c2e5e;color:#fff;font-size:15px;font-weight:bold;cursor:pointer}
+#msg{margin-left:10px;color:#2ea87a;font-weight:bold}
+#copy{max-width:748px;margin:0 auto;background:#fff;padding:16px;border-radius:10px}
+</style></head><body>
+<div class="guide">
+<b>사용 방법</b><br>
+1. 아래 [공지 복사하기] 버튼을 누릅니다.<br>
+2. 홈페이지 공지 편집창의 기존 내용을 모두 지우고, Ctrl+V로 붙여 넣은 뒤 저장합니다.<br>
+<button onclick="cp()">공지 복사하기</button><span id="msg"></span>
+</div>
+<div id="copy"><a href="https://jlsjunggye.github.io/AI/timetable.html" target="_blank"><img src="https://jlsjunggye.github.io/AI/shuttle_banner.png" alt="중계분원 셔틀 시간표 보기" style="width:100%;max-width:748px;"></a>
+<p style="margin:16px 0 8px;color:#c0392b;font-weight:bold;">※ '1교시 한신청구아파트' 정류장은 탑승 인원 조정을 위해 9월부터 임시로 3호차에서 5호차로 변경 운영됩니다.</p>
+<p style="margin:0;">▶ 안전하고 효율적인 운행을 위해 지정된 위치에서만 탑승이 가능하며, 탑승 시간 5분 전 미리 대기 부탁드립니다.</p>
+<p style="margin:0;">▶ 탑승 지점 확인을 위해 사전에 셔틀기사님/선생님과 통화하여 정확한 시간 및 위치를 안내 받으시길 바랍니다.</p>
+<p style="margin:0;">▶ 학원 미탑승시 정상셔틀 앱에서 '안타요' 기능을 이용해주세요.</p>
+<p style="margin:0;">▶ 등록된 노선 외의 다른 노선에서 탑승할 경우 '오늘 탑승정보 변경' 기능을 이용해주세요.</p></div>
+<script>
+function cp(){var r=document.createRange();r.selectNodeContents(document.getElementById('copy'));var s=getSelection();s.removeAllRanges();s.addRange(r);var ok=false;try{ok=document.execCommand('copy')}catch(e){}document.getElementById('msg').textContent=ok?'복사되었습니다. 편집창에 붙여 넣으세요.':'선택된 상태에서 Ctrl+C를 눌러주세요.'}
+</script>
+</body></html>
